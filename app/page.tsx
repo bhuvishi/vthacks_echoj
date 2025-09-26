@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { MainDashboard } from "@/components/main-dashboard"
 import { WritingInterface } from "@/components/writing-interface"
@@ -13,34 +13,49 @@ export default function EchoJournal() {
     "onboarding" | "dashboard" | "writing" | "growth" | "entries" | "profile"
   >("onboarding")
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleOnboardingComplete = () => {
-    setIsOnboardingComplete(true)
-    setCurrentScreen("dashboard")
-  }
+  const handleOnboardingComplete = (newUserId: string) => {
+    setUserId(newUserId);
+    setIsOnboardingComplete(true);
+    setCurrentScreen("dashboard");
+  };
+  
+  // This effect would check for a token in a real app to restore session
+  useEffect(() => {
+    // For this example, we'll keep it simple and just manage state.
+    // In a real app, you would check for a JWT token here.
+    if (isOnboardingComplete && userId) {
+      setCurrentScreen("dashboard");
+    }
+  }, [isOnboardingComplete, userId]);
 
   const renderScreen = () => {
+    // If onboarding is not complete, we start there.
+    if (!isOnboardingComplete) {
+      return <OnboardingFlow onComplete={handleOnboardingComplete} />
+    }
+    
+    // Once onboarding is complete, render the rest of the app based on state.
     switch (currentScreen) {
-      case "onboarding":
-        return <OnboardingFlow onComplete={handleOnboardingComplete} />
       case "dashboard":
-        return <MainDashboard onNavigate={setCurrentScreen} />
+        return <MainDashboard onNavigate={setCurrentScreen} userId={userId as string} />
       case "writing":
-        return <WritingInterface onBack={() => setCurrentScreen("dashboard")} />
+        return <WritingInterface onBack={() => setCurrentScreen("dashboard")} userId={userId as string} />
       case "growth":
-        return <GrowthTracker onBack={() => setCurrentScreen("dashboard")} />
+        return <GrowthTracker onBack={() => setCurrentScreen("dashboard")} userId={userId as string} />
       case "entries":
-        return <PastEntries onBack={() => setCurrentScreen("dashboard")} />
+        return <PastEntries onBack={() => setCurrentScreen("dashboard")} userId={userId as string} />
       case "profile":
-        return <ProfileSettings onBack={() => setCurrentScreen("dashboard")} />
+        return <ProfileSettings onBack={() => setCurrentScreen("dashboard")} userId={userId as string} />
       default:
-        return <MainDashboard onNavigate={setCurrentScreen} />
+        return <MainDashboard onNavigate={setCurrentScreen} userId={userId as string} />
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-100 overflow-hidden font-sans">
-      {/* Aurora Background Effects */}
+      {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000" />

@@ -1,62 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowLeft, TrendingUp, Calendar, Heart, Sparkles } from "lucide-react"
 
 interface GrowthTrackerProps {
   onBack: () => void
+  userId: string;
 }
 
-export function GrowthTracker({ onBack }: GrowthTrackerProps) {
+export function GrowthTracker({ onBack, userId }: GrowthTrackerProps) {
   const [timeRange, setTimeRange] = useState<"week" | "month" | "3months" | "year">("month")
+  const [growthData, setGrowthData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const spiritData = [
-    { date: "2024-01-01", day: "Mon", spirit: 6, label: "Hopeful", emoji: "🌱" },
-    { date: "2024-01-02", day: "Tue", spirit: 8, label: "Uplifted", emoji: "✨" },
-    { date: "2024-01-03", day: "Wed", spirit: 4, label: "Contemplative", emoji: "🤔" },
-    { date: "2024-01-04", day: "Thu", spirit: 9, label: "Radiant", emoji: "🌟" },
-    { date: "2024-01-05", day: "Fri", spirit: 7, label: "Peaceful", emoji: "🕊️" },
-    { date: "2024-01-06", day: "Sat", spirit: 5, label: "Grounded", emoji: "🌿" },
-    { date: "2024-01-07", day: "Sun", spirit: 8, label: "Inspired", emoji: "🦋" },
-  ]
+  useEffect(() => {
+    const fetchGrowthData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3001/api/entries/growth?userId=${userId}`);
+        const data = await response.json();
+        if (response.ok) {
+          setGrowthData(data);
+        } else {
+          console.error("Failed to fetch growth data");
+        }
+      } catch (error) {
+        console.error("Error fetching growth data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) {
+      fetchGrowthData();
+    }
+  }, [userId]);
 
-  const insights = [
-    {
-      title: "Your most reflective times",
-      description: "You tend to journal most between 7-9 PM",
-      icon: Calendar,
-      color: "from-blue-400/20 to-indigo-400/20",
-    },
-    {
-      title: "Words that define your journey",
-      description: "Growth, gratitude, and peace appear most often",
-      icon: Heart,
-      color: "from-pink-400/20 to-rose-400/20",
-    },
-    {
-      title: "Growth themes",
-      description: "Self-compassion and mindfulness are trending",
-      icon: TrendingUp,
-      color: "from-teal-400/20 to-green-400/20",
-    },
-  ]
-
-  const timeCapsules = [
-    {
-      date: "1 year ago",
-      prompt: "What does success mean to you?",
-      oldResponse: "Success means achieving all my goals and being recognized for my work...",
-      theme: "Achievement-focused",
-    },
-    {
-      date: "6 months ago",
-      prompt: "What brings you peace?",
-      oldResponse: "I find peace in quiet moments, usually when I'm reading or walking...",
-      theme: "Finding balance",
-    },
-  ]
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-100">Loading...</div>;
+  }
+  
+  const spiritData = growthData.spiritData || [];
+  const insights = growthData.insights || [];
+  const timeCapsules = growthData.timeCapsule ? [growthData.timeCapsule] : [];
 
   return (
     <div className="min-h-screen p-4">
@@ -111,7 +98,7 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
 
                     {/* Spirit line chart */}
                     <div className="absolute inset-0 flex items-end justify-between px-2">
-                      {spiritData.map((day, index) => (
+                      {spiritData.map((day: any, index: any) => (
                         <div key={index} className="flex flex-col items-center space-y-2 group cursor-pointer">
                           {/* Data point */}
                           <div className="relative">
@@ -155,7 +142,7 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         points={spiritData
-                          .map((day, index) => {
+                          .map((day: any, index: any) => {
                             const x = (index / (spiritData.length - 1)) * 100
                             const y = 100 - ((day.spirit - 1) / 9) * 100
                             return `${x}%,${y}%`
@@ -178,7 +165,7 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
 
         {/* Insights Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {insights.map((insight, index) => (
+          {insights.map((insight: any, index: any) => (
             <Card
               key={index}
               className={`p-6 bg-gradient-to-br opacity-100 shadow-xl bg-chart-3 text-muted rounded-xl ${insight.color} border backdrop-blur-sm hover:shadow-lg transition-all duration-300 border-secondary-foreground`}
@@ -210,7 +197,7 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
             </div>
 
             <div className="space-y-6">
-              {timeCapsules.map((capsule, index) => (
+              {timeCapsules.map((capsule: any, index: any) => (
                 <Card key={index} className="p-6 border border-slate-700/50 backdrop-blur-sm bg-secondary-foreground text-foreground">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">

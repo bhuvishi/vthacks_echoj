@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { ChevronRight, Sparkles, Clock, Bell } from "lucide-react"
 
 interface OnboardingFlowProps {
-  onComplete: () => void
+  onComplete: (userId: string) => void
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
@@ -18,6 +18,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     notifications: false,
     reminderTime: "19:00",
   })
+  const [loading, setLoading] = useState(false);
 
   const steps = [
     {
@@ -101,14 +102,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             {[
-              { value: "daily", label: "Daily", description: "Every day, building a strong habit", emoji: "🌅" },
+              { value: "daily", label: "Daily", description: "Every day, building a strong habit", emoji: "🗓️" },
               {
                 value: "few-times-week",
                 label: "A few times a week",
                 description: "Regular but flexible",
-                emoji: "📝",
+                emoji: "✏️",
               },
-              { value: "weekly", label: "Weekly", description: "Once a week for deeper reflection", emoji: "🌙" },
+              { value: "weekly", label: "Weekly", description: "Once a week for deeper reflection", emoji: "📝" },
               {
                 value: "whenever",
                 label: "Whenever I feel like it",
@@ -197,11 +198,33 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     },
   ]
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      onComplete()
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:3001/api/users/onboard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: "Bhuvishi", // You might want to get this from a form input
+            onboardingPreferences: preferences,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          onComplete(data._id); // Pass the new user ID to the parent component
+        } else {
+          console.error("Failed to onboard user:", data.error);
+        }
+      } catch (error) {
+        console.error("Error onboarding user:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
@@ -245,7 +268,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <Button
                 variant="ghost"
                 onClick={prevStep}
-                disabled={currentStep === 0}
+                disabled={currentStep === 0 || loading}
                 className="text-slate-300 hover:text-slate-100 disabled:opacity-50"
               >
                 Back
@@ -253,9 +276,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
               <Button
                 onClick={nextStep}
+                disabled={loading}
                 className="glass-button text-white px-8 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
               >
-                {currentStep === steps.length - 1 ? "Start Journaling" : "Continue"}
+                {loading ? "Loading..." : currentStep === steps.length - 1 ? "Start Journaling" : "Continue"}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

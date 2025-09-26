@@ -8,9 +8,10 @@ import { ArrowLeft, PenTool, MessageSquare, Smile, Mic, Save, Bold, Italic, List
 
 interface WritingInterfaceProps {
   onBack: () => void
+  userId: string; // Add userId prop
 }
 
-export function WritingInterface({ onBack }: WritingInterfaceProps) {
+export function WritingInterface({ onBack, userId }: WritingInterfaceProps) {
   const [activeMode, setActiveMode] = useState<"write" | "quick" | "emojis" | "voice">("write")
   const [content, setContent] = useState("")
   const [showPrompt, setShowPrompt] = useState(true)
@@ -21,6 +22,7 @@ export function WritingInterface({ onBack }: WritingInterfaceProps) {
     grateful: "",
     challenges: "",
   })
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleContentChange = (value: string) => {
     setContent(value)
@@ -45,11 +47,51 @@ export function WritingInterface({ onBack }: WritingInterfaceProps) {
     { key: "challenges", question: "Any challenges today?" },
   ]
 
-  const handleSave = () => {
-    // Save logic here
-    console.log("Saving entry...", { activeMode, content, selectedEmojis, quickAnswers })
-    onBack()
-  }
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const payload = {
+        userId,
+        type: activeMode,
+        preview: "", // You could generate a preview based on the content
+        wordCount: 0,
+        tags: [], // You could add tags based on content analysis
+      };
+
+      if (activeMode === 'write') {
+        payload.textContent = content;
+        payload.wordCount = wordCount;
+        payload.preview = content.substring(0, 100);
+      } else if (activeMode === 'quick') {
+        payload.quickAnswers = quickAnswers;
+        payload.preview = Object.values(quickAnswers).filter(Boolean).join('. ').substring(0, 100);
+      } else if (activeMode === 'emojis') {
+        payload.emojiContent = selectedEmojis;
+        payload.preview = selectedEmojis.join(" ");
+      } else if (activeMode === 'voice') {
+        // payload.voiceNoteUrl = "your-voice-note-url";
+      }
+
+      const response = await fetch('http://localhost:3001/api/entries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        console.log("Entry saved successfully!");
+        onBack();
+      } else {
+        console.error("Failed to save entry");
+      }
+    } catch (error) {
+      console.error("Error saving entry:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const hasContent =
     content.trim().length > 0 ||
@@ -222,7 +264,7 @@ export function WritingInterface({ onBack }: WritingInterfaceProps) {
         <div className="flex justify-center">
           <Button
             onClick={handleSave}
-            disabled={!hasContent}
+            disabled={!hasContent || isSaving}
             className={`px-8 py-3 rounded-full transition-all duration-300 ${
               hasContent
                 ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl"
@@ -230,7 +272,7 @@ export function WritingInterface({ onBack }: WritingInterfaceProps) {
             }`}
           >
             <Save className="w-4 h-4 mr-2" />
-            Save Entry
+            {isSaving ? "Saving..." : "Save Entry"}
           </Button>
         </div>
       </div>

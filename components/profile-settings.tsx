@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -8,35 +8,74 @@ import { ArrowLeft, Bell, Shield, Palette, Download, Award } from "lucide-react"
 
 interface ProfileSettingsProps {
   onBack: () => void
+  userId: string;
 }
 
-export function ProfileSettings({ onBack }: ProfileSettingsProps) {
-  const [notifications, setNotifications] = useState({
-    dailyReminders: true,
-    weeklyInsights: true,
-    milestoneAlerts: true,
-    smartReminders: false,
-  })
+export function ProfileSettings({ onBack, userId }: ProfileSettingsProps) {
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const [privacy, setPrivacy] = useState({
-    dataEncryption: true,
-    localStorage: true,
-    analytics: false,
-  })
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3001/api/users/${userId}`);
+        const data = await response.json();
+        if (response.ok) {
+          setUserData(data);
+        } else {
+          console.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
 
-  const stats = [
-    { label: "Total Entries", value: "47", icon: "📝" },
-    { label: "Longest Streak", value: "12 days", icon: "🔥" },
-    { label: "Favorite Time", value: "7:30 PM", icon: "🌙" },
-    { label: "Words Written", value: "12,847", icon: "✍️" },
-  ]
+  const handleSettingsChange = async (category: string, key: string, value: boolean) => {
+    setIsUpdating(true);
+    const updatedSettings = {
+      ...userData.settings,
+      [category]: {
+        ...userData.settings[category],
+        [key]: value
+      }
+    };
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${userId}/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedSettings),
+      });
 
-  const badges = [
-    { name: "First Entry", description: "Completed your first journal entry", earned: true, icon: "🌱" },
-    { name: "Week Warrior", description: "7 day writing streak", earned: true, icon: "⚡" },
-    { name: "Reflection Master", description: "50 entries completed", earned: false, icon: "🎯" },
-    { name: "Growth Seeker", description: "Used time capsule feature", earned: true, icon: "🌟" },
-  ]
+      if (response.ok) {
+        setUserData({ ...userData, settings: updatedSettings });
+      } else {
+        console.error("Failed to update settings");
+      }
+    } catch (error) {
+      console.error("Error updating settings:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-100">Loading...</div>;
+  }
+
+  const { stats, badges, settings } = userData;
+  const notifications = settings.notifications;
+  const privacy = settings.privacy;
 
   return (
     <div className="min-h-screen p-4">
@@ -59,13 +98,18 @@ export function ProfileSettings({ onBack }: ProfileSettingsProps) {
                 👤
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-slate-100">Bhuvishi</h2>
-                <p className="text-slate-300">Journaling since January 2024</p>
+                <h2 className="text-xl font-semibold text-slate-100">{userData.name}</h2>
+                <p className="text-slate-300">Journaling since {new Date(userData.joinDate).toLocaleDateString("en-US", { year: "numeric", month: "long" })}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.map((stat, index) => (
+              {[
+                { label: "Total Entries", value: stats.totalEntries, icon: "📝" },
+                { label: "Longest Streak", value: `${stats.longestStreak} days`, icon: "🔥" },
+                { label: "Favorite Time", value: stats.favoriteTime || "N/A", icon: "🌙" },
+                { label: "Words Written", value: stats.wordsWritten, icon: "✍️" },
+              ].map((stat, index) => (
                 <div key={index} className="text-center space-y-2">
                   <div className="text-2xl">{stat.icon}</div>
                   <div className="text-2xl font-bold text-slate-100">{stat.value}</div>
@@ -85,7 +129,7 @@ export function ProfileSettings({ onBack }: ProfileSettingsProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {badges.map((badge, index) => (
+              {badges.map((badge: any, index: any) => (
                 <div
                   key={index}
                   className={`p-4 rounded-lg border transition-all duration-300 ${
@@ -132,8 +176,9 @@ export function ProfileSettings({ onBack }: ProfileSettingsProps) {
                       </p>
                     </div>
                     <Switch
-                      checked={value}
-                      onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [key]: checked }))}
+                      checked={!!value}
+                      onCheckedChange={(checked) => handleSettingsChange("notifications", key, checked)}
+                      disabled={isUpdating}
                     />
                   </div>
                 ))}
@@ -163,8 +208,9 @@ export function ProfileSettings({ onBack }: ProfileSettingsProps) {
                       </p>
                     </div>
                     <Switch
-                      checked={value}
-                      onCheckedChange={(checked) => setPrivacy((prev) => ({ ...prev, [key]: checked }))}
+                      checked={!!value}
+                      onCheckedChange={(checked) => handleSettingsChange("privacy", key, checked)}
+                      disabled={isUpdating}
                     />
                   </div>
                 ))}
