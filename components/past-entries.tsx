@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,58 +8,75 @@ import { ArrowLeft, Search, Filter, Calendar, Smile, PenTool, Mic } from "lucide
 
 interface PastEntriesProps {
   onBack: () => void
-  userId: string;
 }
 
-export function PastEntries({ onBack, userId }: PastEntriesProps) {
+export function PastEntries({ onBack }: PastEntriesProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFilter, setSelectedFilter] = useState<"all" | "mood" | "date" | "type">("all")
-  const [entries, setEntries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`http://localhost:3001/api/entries?userId=${userId}`);
-        const data = await response.json();
-        if (response.ok) {
-          setEntries(data);
-        } else {
-          console.error("Failed to fetch entries");
-        }
-      } catch (error) {
-        console.error("Error fetching entries:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (userId) {
-      fetchEntries();
-    }
-  }, [userId, searchQuery]); // Re-fetch when search query changes
+  const entries = [
+    {
+      id: 1,
+      date: "2024-01-07",
+      type: "text",
+      mood: "grateful",
+      moodColor: "bg-green-400",
+      preview:
+        "Today I realized how much I've grown in the past year. The challenges that once seemed impossible now feel like stepping stones...",
+      wordCount: 247,
+      tags: ["growth", "reflection", "gratitude"],
+    },
+    {
+      id: 2,
+      date: "2024-01-06",
+      type: "emoji",
+      mood: "peaceful",
+      moodColor: "bg-blue-400",
+      preview: "😌 🌅 ☕ 📚 🧘‍♀️ 🌱 ✨",
+      wordCount: 0,
+      tags: ["morning", "peace", "routine"],
+    },
+    {
+      id: 3,
+      date: "2024-01-05",
+      type: "quick",
+      mood: "excited",
+      moodColor: "bg-yellow-400",
+      preview:
+        "Feeling: Energized and ready for new challenges. Grateful for: My supportive family and the opportunity to learn...",
+      wordCount: 89,
+      tags: ["energy", "family", "learning"],
+    },
+    {
+      id: 4,
+      date: "2024-01-04",
+      type: "voice",
+      mood: "thoughtful",
+      moodColor: "bg-purple-400",
+      preview: "Voice note: 3:24 - Reflecting on the conversation with mom about finding balance...",
+      wordCount: 0,
+      tags: ["family", "balance", "conversation"],
+    },
+  ]
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "write":
+      case "text":
         return PenTool
-      case "emojis":
+      case "emoji":
         return Smile
       case "voice":
         return Mic
-      case "quick":
-        return MessageSquare
       default:
         return PenTool
     }
   }
 
-  // The filtering logic is now handled by the backend
-  const filteredEntries = entries;
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-100">Loading...</div>;
-  }
+  const filteredEntries = entries.filter(
+    (entry) =>
+      entry.preview.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+  )
 
   return (
     <div className="min-h-screen p-4">
@@ -154,7 +171,7 @@ export function PastEntries({ onBack, userId }: PastEntriesProps) {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2">
-                      {entry.tags?.map((tag: any) => (
+                      {entry.tags.map((tag) => (
                         <span
                           key={tag}
                           className="text-xs px-2 py-1 bg-slate-700/50 text-slate-300 rounded-full border border-slate-600/50"

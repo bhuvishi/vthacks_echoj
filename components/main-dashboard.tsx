@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -19,35 +19,11 @@ import {
 
 interface MainDashboardProps {
   onNavigate: (screen: "writing" | "growth" | "entries" | "profile") => void
-  userId: string;
 }
 
-export function MainDashboard({ onNavigate, userId }: MainDashboardProps) {
+export function MainDashboard({ onNavigate }: MainDashboardProps) {
   const [currentTime] = useState(new Date())
   const isEvening = currentTime.getHours() >= 18
-  const [userData, setUserData] = useState<any>(null); // Use a more specific type if you have one
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/api/users/${userId}`);
-        const data = await response.json();
-        if (response.ok) {
-          setUserData(data);
-        } else {
-          console.error("Failed to fetch user data");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
 
   const moodData = [
     { day: "Mon", emoji: "🕊️" },
@@ -58,12 +34,6 @@ export function MainDashboard({ onNavigate, userId }: MainDashboardProps) {
     { day: "Sat", emoji: "🌊" },
     { day: "Sun", emoji: "🌟" },
   ]
-  
-  if (loading) {
-      return <div className="min-h-screen flex items-center justify-center text-slate-100">Loading...</div>;
-  }
-  
-  const stats = userData?.stats || {};
 
   return (
     <div className="min-h-screen p-4 pb-20">
@@ -74,7 +44,7 @@ export function MainDashboard({ onNavigate, userId }: MainDashboardProps) {
             <div className="flex items-center space-x-3">
               {isEvening ? <Moon className="w-6 h-6 text-indigo-300" /> : <Sun className="w-6 h-6 text-yellow-300" />}
               <h1 className="text-2xl font-bold text-slate-100 font-mono">
-                Good {isEvening ? "evening" : "morning"}, {userData.name}
+                Good {isEvening ? "evening" : "morning"}, Bhuvishi
               </h1>
             </div>
             <p className="text-slate-400 font-mono text-sm">
@@ -90,7 +60,7 @@ export function MainDashboard({ onNavigate, userId }: MainDashboardProps) {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 glass-effect px-4 py-2 rounded-full shadow-lg">
               <Sparkles className="w-4 h-4 text-teal-300" />
-              <span className="text-sm font-medium font-mono">{stats.longestStreak || 0} day streak</span>
+              <span className="text-sm font-medium font-mono">7 day streak</span>
             </div>
 
             <Button
