@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AuthScreen } from "@/components/auth-screen"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { MainDashboard } from "@/components/main-dashboard"
 import { WritingInterface } from "@/components/writing-interface"
@@ -10,9 +11,13 @@ import { ProfileSettings } from "@/components/profile-settings"
 
 export default function EchoJournal() {
   const [currentScreen, setCurrentScreen] = useState<
-    "onboarding" | "dashboard" | "writing" | "growth" | "entries" | "profile"
-  >("onboarding")
+    "auth" | "onboarding" | "dashboard" | "writing" | "growth" | "entries" | "profile"
+  >("auth")
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
+
+  const handleAuthComplete = () => {
+    setCurrentScreen("onboarding")
+  }
 
   const handleOnboardingComplete = () => {
     setIsOnboardingComplete(true)
@@ -21,6 +26,8 @@ export default function EchoJournal() {
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case "auth":
+        return <AuthScreen onComplete={handleAuthComplete} />
       case "onboarding":
         return <OnboardingFlow onComplete={handleOnboardingComplete} />
       case "dashboard":

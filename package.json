@@ -6,7 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "dev:full": "node start-dev.js",
+    "backend": "cd backend && npm run dev",
+    "backend:install": "cd backend && npm install",
+    "setup": "node setup.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

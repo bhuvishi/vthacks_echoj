@@ -65,7 +65,7 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={onBack} className="text-slate-300 hover:text-slate-100">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>
+            Back to Dashboard
           </Button>
 
           <h1 className="text-2xl font-bold text-slate-100">Growth Tracker</h1>
@@ -78,7 +78,15 @@ export function GrowthTracker({ onBack }: GrowthTrackerProps) {
               <h2 className="text-xl font-semibold text-slate-100 font-mono">Spirit Timeline</h2>
               <div className="flex space-x-2">
                 {(["week", "month", "3months", "year"] as const).map((range) => (
-                  null
+                  <Button
+                    key={range}
+                    variant={timeRange === range ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setTimeRange(range)}
+                    className={timeRange === range ? "glass-button text-teal-100" : "text-slate-400 hover:text-slate-200"}
+                  >
+                    {range === "3months" ? "3M" : range.charAt(0).toUpperCase() + range.slice(1)}
+                  </Button>
                 ))}
               </div>
             </div>

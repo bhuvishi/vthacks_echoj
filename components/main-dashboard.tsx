@@ -24,6 +24,7 @@ interface MainDashboardProps {
 export function MainDashboard({ onNavigate }: MainDashboardProps) {
   const [currentTime] = useState(new Date())
   const isEvening = currentTime.getHours() >= 18
+  const [selectedFrequency, setSelectedFrequency] = useState<string>("")
 
   const moodData = [
     { day: "Mon", emoji: "🕊️" },
@@ -128,6 +129,28 @@ export function MainDashboard({ onNavigate }: MainDashboardProps) {
                 <Mic className="w-4 h-4 mr-2" />
                 Voice note
               </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Journal Frequency Selection */}
+        <Card className="p-6 glass-effect shadow-lg">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-slate-100">How often would you like to journal?</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {["Daily", "Weekly", "Bi-weekly", "Monthly"].map((frequency) => (
+                <Button
+                  key={frequency}
+                  onClick={() => setSelectedFrequency(frequency)}
+                  className={`transition-all duration-300 ${
+                    selectedFrequency === frequency
+                      ? "bg-white text-slate-900 shadow-lg scale-105"
+                      : "border-slate-600/50 text-slate-300 hover:bg-slate-700/30 bg-slate-800/20"
+                  }`}
+                >
+                  {frequency}
+                </Button>
+              ))}
             </div>
           </div>
         </Card>
